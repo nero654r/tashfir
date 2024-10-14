@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>موقع تشفير وفك تشفير الكلمات</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #e9f5ff;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            height: 100vh;
+            margin: 0;
+            color: #333;
+        }
+
+        .container {
+            text-align: center;
+            background-color: #ffffff;
+            padding: 40px 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            margin-top: 20px;
+        }
+
+        h1 {
+            font-size: 30px;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"], textarea {
+            padding: 15px;
+            font-size: 16px;
+            width: 90%;
+            margin-bottom: 15px;
+            border: 1px solid #4CAF50;
+            border-radius: 8px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+            transition: border-color 0.3s ease;
+            resize: vertical;
+        }
+
+        .buttons {
+            margin: 15px 0;
+        }
+
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            margin: 5px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .reset-button {
+            background-color: #f44336;
+        }
+
+        .reset-button:hover {
+            background-color: #e53935;
+        }
+
+        .message {
+            color: green;
+            margin-top: 20px;
+            font-size: 16px;
+            display: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        .copy-btn {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .copy-btn:hover {
+            background-color: #1e88e5;
+        }
+
+        #passwordSection {
+            margin-top: 20px;
+        }
+
+        #passwordInput, #oldPasswordInput, #newPasswordInput {
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #4CAF50;
+            border-radius: 8px;
+        }
+
+        .hidden-text {
+            text-indent: -9999px;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .hidden-encrypted {
+            display: none; /* لتخفي النص المشفر */
+        }
+        
+                /**************************/
+        img{
+           width: 50px;
+           border-radius: 50%;
+        }
+        a{
+           color: #4CAF50;
+           
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>موقع تشفير وفك تشفير الكلمات</h1>
+        <input type="text" id="inputText" placeholder="اكتب النص هنا">
+        <div class="buttons">
+            <button onclick="encrypt()">تشفير</button>
+        </div>
+        <textarea id="outputText" readonly placeholder="النص المشفر سيظهر هنا"></textarea>
+        <div class="buttons">
+            <button onclick="copyText()">نسخ</button>
+        </div>
+        <input type="text" id="encryptedText" placeholder="اكتب النص المشفر لفك التشفير هنا">
+        <div class="buttons">
+            <button onclick="decrypt()">فك التشفير</button>
+        </div>
+        <textarea id="decryptedOutput" readonly placeholder="النص المفكوك سيظهر هنا"></textarea>
+        
+        <div class="buttons">
+            <button class="reset-button" onclick="resetFields()">مسح البيانات</button>
+        </div>
+        
+        <div class="message" id="message"></div>
+        
+        <div id="passwordSection">
+            <input type="text" id="passwordInput" placeholder="أدخل كلمة مرور جديدة">
+            <div class="buttons">
+                <button id="savePasswordButton" onclick="savePassword()">احفظ كلمة المرور</button>
+            </div>
+        </div>
+        
+        <div id="changePasswordSection" style="display: none;">
+            <input type="text" id="oldPasswordInput" placeholder="كلمة المرور القديمة">
+            <input type="text" id="newPasswordInput" placeholder="كلمة المرور الجديدة">
+            <div class="buttons">
+                <button onclick="changePassword()">تغيير كلمة المرور</button>
+            </div>
+        </div>
+        
+        <table id="encryptionTable">
+            <thead>
+                <tr>
+                    <th>النص الأصلي</th>
+                    <th>النص المشفر</th>
+                    <th>نسخ</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <div class="buttons">
+            <button class="reset-button" onclick="clearTable()">مسح بيانات الجدول</button>
+        </div>
+                    <footer>
+    <h4>تم التطوير بواسطة <a href="https://www.facebook.com/profile.php?id=100089759529184">باسم الأعصر  <img src="https://scontent.fcai20-5.fna.fbcdn.net/v/t39.30808-6/436232618_362710560064259_5659474201377181784_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=OeLAk3fKNm0Q7kNvgHA7LOp&_nc_ht=scontent.fcai20-5.fna&_nc_gid=AKvObY4OtAL4BYjgq1T8fbT&oh=00_AYAruCAflRunQ5TYdwT6wbNpoEgRiFrzbv__e7ZNWOyRhA&oe=6711A4E0"/></a></h4>
+    </footer>
+    </div>
+
+    <script>
+        const secretKey = "mySecretKey123"; // يمكنك تغيير المفتاح السري
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadEncryptionHistory(); // تحميل البيانات المحفوظة عند فتح الصفحة
+        });
+
+        function encrypt() {
+            const inputText = document.getElementById("inputText").value;
+            if (!inputText) {
+                showMessage("يرجى إدخال نص للتشفير.");
+                return;
+            }
+
+            const encrypted = CryptoJS.AES.encrypt(inputText, secretKey).toString();
+            document.getElementById("outputText").value = encrypted;
+
+            addToTable(inputText, encrypted); // إضافة البيانات إلى الجدول
+            saveToLocalStorage(inputText, encrypted); // حفظ البيانات في localStorage
+            showMessage("تم تشفير النص بنجاح!");
+        }
+
+        function decrypt() {
+            const encryptedText = document.getElementById("encryptedText").value;
+            if (!encryptedText) {
+                showMessage("يرجى إدخال نص مشفر لفك التشفير.");
+                return;
+            }
+
+            const bytes = CryptoJS.AES.decrypt(encryptedText, secretKey);
+            const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+            
+            if (!decrypted) {
+                showMessage("فشل فك التشفير. تأكد من إدخال النص المشفر الصحيح.");
+                return;
+            }
+
+            document.getElementById("decryptedOutput").value = decrypted;
+            showMessage("تم فك تشفير النص بنجاح!");
+        }
+
+        function copyText() {
+            const outputText = document.getElementById("outputText");
+            outputText.select();
+            navigator.clipboard.writeText(outputText.value);
+            showMessage("تم نسخ النص!");
+        }
+
+        function resetFields() {
+            document.getElementById("inputText").value = '';
+            document.getElementById("outputText").value = '';
+            document.getElementById("encryptedText").value = '';
+            document.getElementById("decryptedOutput").value = '';
+            showMessage("تم مسح البيانات!");
+        }
+
+        function showMessage(msg) {
+            const messageDiv = document.getElementById("message");
+            messageDiv.innerText = msg;
+            messageDiv.style.display = "block";
+            setTimeout(() => {
+                messageDiv.style.display = "none";
+            }, 3000);
+        }
+
+        function addToTable(originalText, encryptedText) {
+            const tableBody = document.getElementById("encryptionTable").querySelector("tbody");
+            const newRow = document.createElement("tr");
+            newRow.innerHTML = `
+                <td>${originalText}</td>
+                <td>*****</td> <!-- تم استبدال النص المشفر بـ ***** -->
+                <td><button class="copy-btn" onclick="copySpecificText('${encryptedText}')">نسخ</button></td>
+            `;
+            tableBody.appendChild(newRow);
+        }
+
+        function copySpecificText(text) {
+            const storedPassword = localStorage.getItem('userPassword');
+            const enteredPassword = prompt('يرجى إدخال كلمة المرور لنسخ النص المشفر:');
+
+            if (enteredPassword === storedPassword) {
+                const textarea = document.createElement("textarea");
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textarea);
+                showMessage("تم نسخ النص المشفر بنجاح!");
+            } else {
+                showMessage("كلمة المرور غير صحيحة.");
+            }
+        }
+
+        function saveToLocalStorage(originalText, encryptedText) {
+            const encryptionHistory = JSON.parse(localStorage.getItem('encryptionHistory')) || [];
+            encryptionHistory.push({ originalText, encryptedText });
+            localStorage.setItem('encryptionHistory', JSON.stringify(encryptionHistory));
+        }
+
+        function loadEncryptionHistory() {
+            const encryptionHistory = JSON.parse(localStorage.getItem('encryptionHistory')) || [];
+            encryptionHistory.forEach(entry => {
+                addToTable(entry.originalText, entry.encryptedText);
+            });
+        }
+
+        function savePassword() {
+            const password = document.getElementById('passwordInput').value;
+            if (password) {
+                localStorage.setItem('userPassword', password);
+                document.getElementById('passwordInput').value = '';
+                showMessage("تم حفظ كلمة المرور بنجاح!");
+
+                // استبدال زر "احفظ كلمة المرور" بزر "تغيير كلمة المرور"
+                document.getElementById('savePasswordButton').style.display = 'none';
+                document.getElementById('changePasswordSection').style.display = 'block';
+            } else {
+                showMessage("يرجى إدخال كلمة مرور.");
+            }
+        }
+
+        function changePassword() {
+            const oldPassword = document.getElementById('oldPasswordInput').value;
+            const newPassword = document.getElementById('newPasswordInput').value;
+            const storedPassword = localStorage.getItem('userPassword');
+
+            if (oldPassword === storedPassword) {
+                localStorage.setItem('userPassword', newPassword);
+                document.getElementById('oldPasswordInput').value = '';
+                document.getElementById('newPasswordInput').value = '';
+                showMessage("تم تغيير كلمة المرور بنجاح!");
+
+                // إعادة زر "تغيير كلمة المرور" لإخفاء المعلومات القديمة
+                document.getElementById('changePasswordSection').style.display = 'none';
+                document.getElementById('savePasswordButton').style.display = 'block';
+            } else {
+                showMessage("كلمة المرور القديمة غير صحيحة.");
+            }
+        }
+
+        function clearTable() {
+            const password = prompt("يرجى إدخال كلمة المرور لتأكيد عملية المسح:");
+            const storedPassword = localStorage.getItem('userPassword');
+
+            if (password === storedPassword) {
+                localStorage.removeItem('encryptionHistory'); // حذف البيانات من localStorage
+                document.getElementById("encryptionTable").querySelector("tbody").innerHTML = ''; // مسح الجدول
+                showMessage("تم مسح بيانات الجدول بنجاح!");
+            } else {
+                showMessage("كلمة المرور غير صحيحة.");
+            }
+        }
+    </script>
+
+</body>
+</html>
